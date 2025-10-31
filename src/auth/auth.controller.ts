@@ -125,7 +125,7 @@ export class AuthController {
 
   // Инициация авторизации через yandex
   @Get('yandex')
-  @UseGuards(AuthGuard('yandex'))
+  @UseGuards(AuthGuard('yandex')) // Делает redirect 302 на Яндекс https://oauth.yandex.ru/authorize?
   async yandexAuth(@Req() _req) {}
 
   @Get('yandex/callback')
