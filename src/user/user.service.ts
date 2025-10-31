@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { hash } from 'argon2';
 import { AuthDto } from 'src/auth/dto/auth.dto';
@@ -39,5 +39,29 @@ export class UserService {
         password: await hash(dto.password),
       },
     });
+  }
+
+  async toggleFavorite(productId: string, userId: string) {
+    const user = await this.getById(userId);
+
+    if (!user) {
+      throw new BadRequestException('Пользователь не найден');
+    }
+
+    const isExists = user.favorites.some((product) => product.id === productId);
+
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        favorites: {
+          [isExists ? 'disconnect' : 'connect']: {
+            id: productId,
+          },
+        },
+      },
+    });
+    return true;
   }
 }
