@@ -1,0 +1,49 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
+import { CreateStoreDto } from './dto/create-store.dto';
+import { UpdateStoreDto } from './dto/update-store.to';
+
+@Injectable()
+export class StoreService {
+  constructor(private prisma: PrismaService) {}
+
+  async getById(storeId: string, userId: string) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: storeId, userId },
+    });
+
+    if (!store) {
+      throw new NotFoundException(
+        'Магазин не найден или вы не являетесь его владельцем',
+      );
+    }
+    return store;
+  }
+
+  async create(dto: CreateStoreDto, userId: string) {
+    return this.prisma.store.create({ data: { title: dto.title, userId } });
+  }
+
+  async update(storeId: string, userId: string, dto: UpdateStoreDto) {
+    // Функция для валидация прав доступа, если не проёдет, то вылетит ошибка,
+    // если пройдёт то код идет дальше, а вызов функции ни на что не влияет
+    await this.getById(storeId, userId);
+
+    return this.prisma.store.update({
+      where: {
+        id: storeId,
+      },
+      data: {
+        title: dto.title,
+        description: dto.description,
+        userId,
+      },
+    });
+  }
+
+  async delete(storeId: string, userId: string) {
+    await this.getById(storeId, userId);
+
+    return this.prisma.store.delete({ where: { id: storeId } });
+  }
+}
